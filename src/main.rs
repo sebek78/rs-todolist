@@ -1,30 +1,43 @@
 use crossterm::{
-    event::{
-        read, DisableMouseCapture, EnableMouseCapture, Event, KeyCode, KeyEvent, KeyModifiers,
-    },
-    execute,
+    event::{read, Event, KeyCode, KeyEvent, KeyModifiers},
+    terminal::{disable_raw_mode, enable_raw_mode},
 };
 
+fn process_event(mut state: u32, event: KeyEvent) -> u32 {
+    println!("{:?}", event);
+    state += 1;
+    state
+}
+
+fn render(state: u32) {
+    println!("{}", state);
+}
+
 fn print_events() -> crossterm::Result<()> {
+    let mut state: u32 = 0;
+    render(state);
+
     loop {
         match read()? {
             Event::Key(KeyEvent {
                 code: KeyCode::Char('c'),
                 modifiers: KeyModifiers::CONTROL,
             }) => break,
-            Event::Key(event) => println!("{:?}", event),
-            Event::Mouse(event) => println!("{:?}", event),
-            Event::Resize(width, height) => println!("New size {}x{}", width, height),
+            Event::Key(event) => {
+                state = process_event(state, event);
+            }
+            _ => break,
         }
+
+        render(state);
     }
     Ok(())
 }
 
 fn main() {
-    let mut stdout = std::io::stdout();
-    execute!(stdout, EnableMouseCapture);
+    enable_raw_mode().unwrap();
 
     print_events().unwrap();
 
-    execute!(stdout, DisableMouseCapture);
+    disable_raw_mode().unwrap();
 }
