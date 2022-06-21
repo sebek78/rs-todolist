@@ -1,21 +1,18 @@
+mod events;
+mod renderer;
+mod state;
+use crate::events::process_event;
+use crate::renderer::render;
+use crate::state::AppState;
+
 use crossterm::{
     event::{read, Event, KeyCode, KeyEvent, KeyModifiers},
     terminal::{disable_raw_mode, enable_raw_mode},
 };
 
-fn process_event(mut state: u32, event: KeyEvent) -> u32 {
-    println!("{:?}", event);
-    state += 1;
-    state
-}
-
-fn render(state: u32) {
-    println!("{}", state);
-}
-
 fn print_events() -> crossterm::Result<()> {
-    let mut state: u32 = 0;
-    render(state);
+    let mut state = AppState::new();
+    render(&state);
 
     loop {
         match read()? {
@@ -24,12 +21,11 @@ fn print_events() -> crossterm::Result<()> {
                 modifiers: KeyModifiers::CONTROL,
             }) => break,
             Event::Key(event) => {
-                state = process_event(state, event);
+                process_event(&mut state, event);
             }
             _ => break,
         }
-
-        render(state);
+        render(&state);
     }
     Ok(())
 }
